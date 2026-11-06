@@ -126,7 +126,7 @@ class FullScreenSender:
         self.photo = None
         self.started_at = None
 
-        root.title("QR File Sender")
+        root.title("QR File Sender - Windows / macOS")
         root.configure(bg="black")
         root.attributes("-fullscreen", True)
         root.bind("<Escape>", self.stop)
