@@ -25,11 +25,10 @@ import secrets
 import struct
 import sys
 import time
-import uuid
+import tkinter as tk
 import zlib
 from pathlib import Path
-import tkinter as tk
-from tkinter import filedialog, messagebox
+from tkinter import filedialog
 
 try:
     import qrcode
