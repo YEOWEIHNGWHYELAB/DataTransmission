@@ -19,7 +19,7 @@ PACKET_DATA = 0x02
 PACKET_END = 0x03
 
 # 28-byte big-endian packet header
-HEADER_FORMAT = ">4sBBQIIHI"
+HEADER_FORMAT = ">4sBB8sIIHI"
 HEADER_SIZE = struct.calcsize(HEADER_FORMAT)
 
 
@@ -59,9 +59,7 @@ def decode_packet(raw):
         payload = raw[HEADER_SIZE:]
 
         # CRC32 covers the first 24 header bytes + payload.
-        calculated_crc = zlib.crc32(
-            raw[:24] + payload
-        ) & 0xFFFFFFFF
+        calculated_crc = zlib.crc32(payload) & 0xFFFFFFFF
 
         if calculated_crc != checksum:
             return None
@@ -122,7 +120,8 @@ def decode_manifest(payload):
         if not isinstance(manifest["total_chunks"], int) or manifest["total_chunks"] < 0:
             raise ValueError("Invalid total chunks")
 
-        expected_chunks = (
+        expected_chunks = max(
+            1,
             (manifest["file_size"] + manifest["chunk_size"] - 1)
             // manifest["chunk_size"]
         )
@@ -254,9 +253,7 @@ def scan_video(video_path, output_dir):
                                 manifest["transfer_id"]
                             )
 
-                            if packet["transfer_id"] != int.from_bytes(
-                                transfer_id, "big"
-                            ):
+                            if packet["transfer_id"] != transfer_id:
                                 raise ValueError(
                                     "Manifest packet transfer ID mismatch"
                                 )
@@ -282,9 +279,7 @@ def scan_video(video_path, output_dir):
 
                     continue
 
-                if packet["transfer_id"] != int.from_bytes(
-                    transfer_id, "big"
-                ):
+                if packet["transfer_id"] != transfer_id:
                     continue
 
                 if packet["total_chunks"] != manifest["total_chunks"]:
