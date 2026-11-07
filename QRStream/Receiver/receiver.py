@@ -410,24 +410,36 @@ def scan_video(video_path, output_dir):
 
         reconstructed = output_dir / manifest["filename"]
 
+        print("\nReconstructing file...\n")
+
         hasher = hashlib.sha256()
+        bytes_written = 0
 
         with reconstructed.open("wb") as output:
 
             for sequence in range(total_chunks):
                 chunk_path = output_dir / str(sequence)
-
-                if not chunk_path.is_file():
-                    raise RuntimeError(
-                        f"Chunk file unexpectedly missing: {sequence}"
-                    )
-
                 chunk = chunk_path.read_bytes()
 
                 output.write(chunk)
                 hasher.update(chunk)
 
+                bytes_written += len(chunk)
+
+                if sequence % 100 == 0 or sequence == total_chunks - 1:
+                    percentage = ((sequence + 1) / total_chunks * 100)
+                    print(
+                        f"\rReconstructing: "
+                        f"{sequence + 1:,}/{total_chunks:,} "
+                        f"({percentage:.1f}%) "
+                        f"| {bytes_written:,} bytes",
+                        end="",
+                        flush=True
+                    )
+
         actual_hash = hasher.hexdigest()
+
+        print("\n\nVerifying SHA-256...")
 
         if actual_hash == manifest["sha256"]:
 
